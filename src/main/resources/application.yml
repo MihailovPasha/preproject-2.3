@@ -1,6 +1,10 @@
 spring:
   application:
     name: UserInfo
+  mvc:
+    hiddenmethod:
+      filter:
+        enabled: true
   datasource:
     url: jdbc:postgresql://localhost:5432/postgres
     username: postgres

@@ -1,9 +1,11 @@
 package com.example.userinfo.service;
 
+import com.example.userinfo.exception.UserNotFoundException;
+import com.example.userinfo.mapper.UserMapper;
 import com.example.userinfo.model.User;
 import com.example.userinfo.repository.UserRepository;
 import jakarta.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,13 +13,10 @@ import java.util.List;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
-
-    @Autowired
-    public UserServiceImpl(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+    private final UserMapper userMapper;
 
     @Override
     @Transactional(readOnly = true)
@@ -26,8 +25,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public User getUserById(Long id) {
-        return userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found: " + id));
+        return userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
     }
 
     @Override
@@ -38,14 +38,15 @@ public class UserServiceImpl implements UserService {
     @Override
     public User updateUser(Long id, User userDetails) {
         User user = getUserById(id);
-        user.setName(userDetails.getName());
-        user.setAge(userDetails.getAge());
-        user.setEmail(userDetails.getEmail());
+        userMapper.updateUser(userDetails, user);
         return userRepository.save(user);
     }
 
     @Override
     public void deleteUser(Long id) {
+        if (!userRepository.existsById(id)) {
+            throw new UserNotFoundException(id);
+        }
         userRepository.deleteById(id);
     }
 

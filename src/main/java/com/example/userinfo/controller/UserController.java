@@ -2,26 +2,24 @@ package com.example.userinfo.controller;
 
 import com.example.userinfo.model.User;
 import com.example.userinfo.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 
 @Controller
-@RequestMapping("/users")
+@RequestMapping("/v1/users")
+@RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
-
-    @Autowired
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
 
     @GetMapping
     public String getAllUsers(Model model) {
@@ -30,28 +28,28 @@ public class UserController {
         return "users";
     }
 
-    @PostMapping("/save")
+    @PostMapping
     public String saveUser(@ModelAttribute User user) {
         userService.saveUser(user);
-        return "redirect:/users";
+        return "redirect:/v1/users";
     }
 
-    @GetMapping("/edit/{id}")
+    @GetMapping("/{id}")
     public String showEditForm(@PathVariable Long id, Model model) {
         model.addAttribute("user", userService.getUserById(id));
         model.addAttribute("users", userService.getAllUsers());
         return "users";
     }
 
-    @PostMapping("/update/{id}")
+    @PutMapping("/{id}")
     public String updateUser(@PathVariable Long id, @ModelAttribute User user) {
         userService.updateUser(id, user);
-        return "redirect:/users";
+        return "redirect:/v1/users";
     }
 
-    @GetMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     public String deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
-        return "redirect:/users";
+        return "redirect:/v1/users";
     }
 }
