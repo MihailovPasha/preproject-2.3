@@ -10,9 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -37,15 +36,33 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User saveUser(User user) {
+    public User saveUser(User user, Set<Long> roleIds) {
+        if (roleIds != null && !roleIds.isEmpty()) {
+            Set<Role> roles = new HashSet<>(roleService.getRolesByIds(roleIds));
+            user.setRoles(roles);
+        } else {
+            Role userRole = roleService.findByName("ROLE_USER")
+                    .orElseGet(() -> roleService.save(new Role("ROLE_USER")));
+            user.setRoles(Set.of(userRole));
+        }
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
 
     @Override
-    public User updateUser(Long id, User userDetails) {
-        User user = getUserById(id);
-        userMapper.updateUser(userDetails, user);
-        return userRepository.save(user);
+    public User updateUser(Long id, User userDetails, Set<Long> roleIds) {
+        User existingUser = getUserById(id);
+        userMapper.updateUser(userDetails, existingUser);
+
+        if (roleIds != null && !roleIds.isEmpty()) {
+            Set<Role> roles = new HashSet<>(roleService.getRolesByIds(roleIds));
+            existingUser.setRoles(roles);
+        }
+
+        if (userDetails.getPassword() != null && !userDetails.getPassword().trim().isEmpty()) {
+            existingUser.setPassword(passwordEncoder.encode(userDetails.getPassword()));
+        }
+        return userRepository.save(existingUser);
     }
 
     @Override
@@ -54,12 +71,6 @@ public class UserServiceImpl implements UserService {
             throw new UserNotFoundException(id);
         }
         userRepository.deleteById(id);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Optional<User> findByEmail(String email) {
-        return userRepository.findByEmail(email);
     }
 
     @Override

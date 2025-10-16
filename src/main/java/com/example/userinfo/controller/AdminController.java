@@ -1,11 +1,9 @@
 package com.example.userinfo.controller;
 
-import com.example.userinfo.model.Role;
 import com.example.userinfo.model.User;
 import com.example.userinfo.service.RoleService;
 import com.example.userinfo.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -16,8 +14,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-
-import java.util.HashSet;
 import java.util.Set;
 
 
@@ -28,7 +24,6 @@ public class AdminController {
 
     private final UserService userService;
     private final RoleService roleService;
-    private final PasswordEncoder passwordEncoder;
 
     @GetMapping
     public String getAllUsers(Model model) {
@@ -41,17 +36,7 @@ public class AdminController {
     @PostMapping
     public String saveUser(@ModelAttribute User user,
                            @RequestParam(value = "selectedRoles", required = false) Set<Long> roleIds) {
-        if (roleIds != null && !roleIds.isEmpty()) {
-            Set<Role> roles = new HashSet<>(roleService.getRolesByIds(roleIds));
-            user.setRoles(roles);
-        } else {
-            Role userRole = roleService.findByName("ROLE_USER")
-                    .orElseGet(() -> roleService.save(new Role("ROLE_USER")));
-            user.setRoles(Set.of(userRole));
-        }
-
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userService.saveUser(user);
+        userService.saveUser(user, roleIds);
         return "redirect:/v1/admin";
     }
 
@@ -67,23 +52,7 @@ public class AdminController {
     public String updateUser(@PathVariable Long id,
                              @ModelAttribute User user,
                              @RequestParam(value = "selectedRoles", required = false) Set<Long> roleIds) {
-        User existingUser = userService.getUserById(id);
-
-        existingUser.setEmail(user.getUsername());
-        existingUser.setName(user.getName());
-        existingUser.setAge(user.getAge());
-        existingUser.setEmail(user.getEmail());
-
-        if (roleIds != null && !roleIds.isEmpty()) {
-            Set<Role> roles = new HashSet<>(roleService.getRolesByIds(roleIds));
-            existingUser.setRoles(roles);
-        }
-
-        if (user.getPassword() != null && !user.getPassword().trim().isEmpty()) {
-            existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
-        }
-
-        userService.saveUser(existingUser);
+        userService.updateUser(id, user, roleIds);
         return "redirect:/v1/admin";
     }
 

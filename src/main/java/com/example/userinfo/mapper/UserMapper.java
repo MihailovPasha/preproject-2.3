@@ -16,8 +16,8 @@ public interface UserMapper {
             target.setName(source.getName());
         }
 
-        if (source.getUsername() != null) {
-            target.setEmail(source.getUsername());
+        if (source.getEmail() != null) {
+            target.setEmail(source.getEmail());
         }
 
         target.setAge(source.getAge());

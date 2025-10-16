@@ -1,25 +1,18 @@
 package com.example.userinfo.controller;
 
-import com.example.userinfo.model.Role;
 import com.example.userinfo.model.User;
-import com.example.userinfo.service.RoleService;
 import com.example.userinfo.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.Collections;
-
 @Controller
 @RequiredArgsConstructor
 public class AuthController {
     private final UserService userService;
-    private final RoleService roleService;
-    private final PasswordEncoder passwordEncoder;
 
     @GetMapping("/login")
     public String loginPage(@RequestParam(value = "error", required = false) String error,
@@ -42,18 +35,12 @@ public class AuthController {
 
     @PostMapping("/register")
     public String registerUser(User user, Model model) {
-        if (userService.existsByEmail(user.getUsername())) {
+        if (userService.existsByEmail(user.getEmail())) {
             model.addAttribute("error", "Email already exists!");
             return "register";
         }
 
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-
-        Role userRole = roleService.findByName("ROLE_USER")
-                .orElseGet(() -> roleService.save(new Role("ROLE_USER")));
-        user.setRoles(Collections.singleton(userRole));
-
-        userService.saveUser(user);
+        userService.saveUser(user, null);
         return "redirect:/login?success";
     }
 }

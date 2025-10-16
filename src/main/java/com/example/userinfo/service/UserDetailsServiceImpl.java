@@ -1,5 +1,7 @@
 package com.example.userinfo.service;
 
+import com.example.userinfo.model.SecurityUser;
+import com.example.userinfo.model.User;
 import com.example.userinfo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,7 +19,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
-        return userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+
+        return new SecurityUser(user);
     }
 }
